@@ -4350,50 +4350,57 @@
             };
 
             window.placeBet = function () {
-                const amount = parseFloat(document.getElementById('betAmount').value);
-                if (!amount || amount <= 0) {
-                    alert('Введите корректную ставку!');
-                    vibrate([100, 50, 100]);
-                    return;
-                }
-                if (amount > 50) {
-                    alert('Максимальная ставка: 50 TON');
-                    vibrate([100, 50, 100]);
-                    return;
-                }
-                if (amount > balance) {
-                    alert('Недостаточно средств');
-                    vibrate([100, 50, 100]);
-                    return;
-                }
+            const amount = parseFloat(document.getElementById('betAmount').value);
+            if (!amount || amount <= 0) {
+                alert('Введите корректную ставку!');
+                vibrate([100, 50, 100]);
+                return;
+            }
+            if (amount > 50) {
+                alert('Максимальная ставка: 50 TON');
+                vibrate([100, 50, 100]);
+                return;
+            }
+            if (amount > balance) {
+                alert('Недостаточно средств');
+                vibrate([100, 50, 100]);
+                return;
+            }
 
-                balance -= amount;
-                const betData = {
-                    amount: amount,
-                    type: 'ton'
-                };
+           
+            balance -= amount; 
+        
+            if (typeof window.saveBalanceToDB === 'function') {
+                window.saveBalanceToDB();
+            }
+            // -----------------------
 
-                if (autoCash) {
-                    autoCashAmount = parseFloat(document.getElementById('autoCashAmount').value) || 0;
-                }
-
-                if (crashGameState.gameRunning) {
-                    crashGameState.pendingBet = betData;
-                    alert('Ставка будет размещена в следующей игре');
-                } else {
-                    crashGameState.currentBet = betData;
-                    addPlayerBet();
-                    const cashoutBtn = document.getElementById('cashoutBtn');
-                    if (cashoutBtn) cashoutBtn.classList.add('show');
-                }
-
-                updateBalance();
-                closeBetModal();
-                const betButton = document.getElementById('betButton');
-                if (betButton) betButton.classList.add('hidden');
-                
-                vibrate([50, 30, 80]);
+            const betData = {
+                amount: amount,
+                type: 'ton'
             };
+
+            if (autoCash) {
+                autoCashAmount = parseFloat(document.getElementById('autoCashAmount').value) || 0;
+            }
+
+            if (crashGameState.gameRunning) {
+                crashGameState.pendingBet = betData;
+                alert('Ставка будет размещена в следующей игре');
+            } else {
+                crashGameState.currentBet = betData;
+                addPlayerBet();
+                const cashoutBtn = document.getElementById('cashoutBtn');
+                if (cashoutBtn) cashoutBtn.classList.add('show');
+            }
+
+            updateBalance();
+            closeBetModal();
+            const betButton = document.getElementById('betButton');
+            if (betButton) betButton.classList.add('hidden');
+            
+            vibrate([50, 30, 80]);
+        };
 
             window.placeGiftBet = function () {
                 if (selectedGift === null) {
@@ -4439,7 +4446,14 @@
             window.cashOut = function () {
                 if (crashGameState.currentBet && crashGameState.gameRunning) {
                     const winAmount = crashGameState.currentBet.amount * crashGameState.multiplier;
+
                     balance += winAmount;
+                
+                    if (typeof window.saveBalanceToDB === 'function') {
+                        window.saveBalanceToDB();
+                    }
+                    // -------------------------------
+
                     updateBalance();
 
                     const playerIndex = crashGameState.players.findIndex(p => p.isPlayer);
@@ -5735,8 +5749,10 @@
                 userRef.once('value', (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
-                        balance = data.balance || 0.10;
+        
+                        balance = data.balance || 0.10; 
                     } else {
+       
                         userRef.set({
                             username: username,
                             balance: 0.10,
@@ -5744,10 +5760,13 @@
                         });
                         balance = 0.10;
                     }
+
                     if(display) display.textContent = username;
                     if(modal) modal.style.display = 'none';
-                    updateBalanceDisplay();
-                });
+                    
+                  
+                    updateBalanceDisplay(); 
+                }); 
             } else {
                 loadGameData(); 
             }
