@@ -5878,39 +5878,43 @@
             };
 
             try {
-                const result = await tonConnectUI.sendTransaction(transaction);
+            const result = await tonConnectUI.sendTransaction(transaction);
+            
+            const user = window.Telegram.WebApp.initDataUnsafe.user;
+            if (user) {
+                const userRef = db.ref('users/' + user.id);
                 
-                const user = window.Telegram.WebApp.initDataUnsafe.user;
-                if (user) {
+                userRef.once('value', (snapshot) => {
+                    let currentBalance = 0;
+                    if (snapshot.exists()) {
+                        currentBalance = snapshot.val().balance || 0;
+                    }
+  
+                    let newBalance = Number((currentBalance + amount).toFixed(2));
+ 
+                    userRef.update({ balance: newBalance });
+
+                    window.balance = newBalance; 
+                    
+                    const balanceElement = document.getElementById('statusBalance');
+                    if (balanceElement) {
+                        balanceElement.textContent = newBalance.toFixed(2); 
+                    }
+
+                    
                     db.ref('deposits/' + user.id).push({
                         amount: amount,
                         status: "completed",
                         timestamp: Date.now()
                     });
-
-                    const userRef = db.ref('users/' + user.id);
-                    userRef.once('value', (snapshot) => {
-                        let currentBalance = 0;
-                        if (snapshot.exists()) {
-                            currentBalance = snapshot.val().balance || 0;
-                        }
-                        let newBalance = currentBalance + amount;
-                        
-                        userRef.update({ balance: newBalance }); 
-                        window.balance = newBalance;         
-                        if (typeof updateBalanceDisplay === 'function') {
-                            updateBalanceDisplay();           
-                        }
-                    });
-                }
-                
-                alert(`Пополнение на ${amount} TON успешно! Баланс обновлен.`);
+                });
+            }
+            
+                alert(`Баланс успешно пополнен на ${amount} TON!`);
             } catch (e) {
                 console.error(e);
-                alert("Ошибка оплаты или отмена.");
+                alert("Ошибка при подтверждении платежа.");
             }
-
-        };
 
         async function executeTransaction(amount) {
             const transaction = {
