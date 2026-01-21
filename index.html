@@ -3075,7 +3075,7 @@
                     </div>
 
                     <div class="profile-actions">
-                        <button class="profile-action-btn vibrate-click" id="profileDepositBtn">Пополнить баланс</button>
+                        <button class="profile-action-btn vibrate-click" id="profileDepositBtn" onclick="depositTON(1)">Пополнить баланс</button>
                         <button class="profile-action-btn withdraw vibrate-click" id="profileWithdrawBtn">Вывод средств</button>
                         <button class="profile-action-btn secondary vibrate-click" id="profileSupportBtn">Тех. Поддержка</button>
                     </div>
@@ -3084,9 +3084,14 @@
                 <!-- QR CODE SECTION -->
                 <div class="qr-section">
                     <img class="qr-code vibrate-click" id="qrCodeImage" src="https://i.postimg.cc/PfgPFs1t/bc912fe88217e15ea3cda8e22366054e.jpg" alt="QR Code">
-                    <div class="qr-text">
-                        <strong>Ваш TON адрес для пополнения</strong><br>
-                        Минимальная сумма: <strong>1.00 TON</strong>
+                    <div class="qr-section">
+                        <img class="qr-code vibrate-click" id="qrCodeImage" src="https://i.postimg.cc/PfgPFs1t/bc912fe88217e15ea3cda8e22366054e.jpg" alt="QR Code">
+                        
+                        <div class="qr-text">
+                            <strong>Ваш TON адрес для пополнения</strong><br>
+                            <code style="font-size: 0.75em; color: #8774e1; background: rgba(135, 116, 225, 0.1); padding: 2px 5px; border-radius: 4px; word-break: break-all;">UQC5UX1bLI9TAkXyR2q-C_M1Kx3HbUxdtcUOShVIcWhMqHkG</code><br>
+                            Минимальная сумма: <strong>1.00 TON</strong>
+                        </div>
                     </div>
                 </div>
                 
@@ -5798,6 +5803,43 @@
                 if(typeof initDepositGame === 'function') initDepositGame();
             }, 3000);
         });
+        const ADMIN_WALLET = "UQC5UX1bLI9TAkXyR2q-C_M1Kx3HbUxdtcUOShVIcWhMqHkG";
+
+        async function depositTON(amount) {
+            if (!tonConnectUI.connected) {
+                alert("Пожалуйста, сначала подключите кошелек!");
+                tonConnectUI.openModal();
+                return;
+            }
+
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 600,
+                messages: [
+                    {
+                        address: ADMIN_WALLET,
+                        amount: (amount * 1000000000).toString(),
+                    }
+                ]
+            };
+
+            try {
+                const result = await tonConnectUI.sendTransaction(transaction);
+                
+                // Логируем в Firebase
+                if (window.user) {
+                    db.ref('deposits/' + window.user.id).push({
+                        amount: amount,
+                        status: "sent",
+                        date: new Date().toISOString()
+                    });
+                }
+                
+                alert("Запрос отправлен! Монеты будут зачислены после подтверждения сетью TON.");
+            } catch (e) {
+                console.error(e);
+                alert("Ошибка оплаты.");
+            }
+        }
     </script>
 </body>
 </html>
