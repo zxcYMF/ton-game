@@ -2859,10 +2859,9 @@
         </div>
     </div>
 
-    <!-- Status Bar with Balance -->
     <div class="status-bar" id="statusBar">
         <div class="balance-display">
-            <span id="statusBalance">0.10</span>
+            <span id="statusBalance">...</span> 
             <img src="https://ton.app/assets/images/what-is-ton/ton-logo.png" alt="TON" class="ton-logo-white">
         </div>
         <div id="ton-connect-button" style="margin-top: 5px;"></div>
@@ -3343,7 +3342,7 @@
         
 
         // Global Variables
-        let balance = 0.10;
+        let balance = 0;
         let currentGame = 'crash';
         let inventory = [];
         let selectedGift = null;
@@ -5749,22 +5748,24 @@
                 userRef.once('value', (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
-        
-                        balance = data.balance || 0.10; 
+                        balance = data.balance !== undefined ? data.balance : 0.10; 
                     } else {
-       
+                        balance = 0.10;
                         userRef.set({
                             username: username,
-                            balance: 0.10,
+                            balance: balance,
                             lastLogin: new Date().toISOString()
                         });
-                        balance = 0.10;
                     }
 
+                    const balanceElement = document.getElementById('statusBalance');
+                    if (balanceElement) {
+                        balanceElement.textContent = balance.toFixed(2);
+                    }
+                    
                     if(display) display.textContent = username;
                     if(modal) modal.style.display = 'none';
                     
-                  
                     updateBalanceDisplay(); 
                 }); 
             } else {
