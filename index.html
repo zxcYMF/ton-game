@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <meta charset="UTF-8">
@@ -5645,13 +5647,36 @@
             }
         });
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5J4jYkIPKu77wPmB9IhFMeKf1hBS7Cvs",
+            authDomain: "ton-game-app.firebaseapp.com",
+            databaseURL: "https://ton-game-app-default-rtdb.firebaseio.com",
+            projectId: "ton-game-app",
+            storageBucket: "ton-game-app.firebasestorage.app",
+            messagingSenderId: "1057469053210",
+            appId: "1:1057469053210:web:811fa4e8ea33572e0c54a3"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5J4jYkIPKu77wPmB9IhFMeKf1hBS7Cvs",
+            authDomain: "ton-game-app.firebaseapp.com",
+            databaseURL: "https://ton-game-app-default-rtdb.firebaseio.com",
+            projectId: "ton-game-app",
+            storageBucket: "ton-game-app.firebasestorage.app",
+            messagingSenderId: "1057469053210",
+            appId: "1:1057469053210:web:811fa4e8ea33572e0c54a3"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         document.addEventListener('DOMContentLoaded', function () {
-            
             const tg = window.Telegram.WebApp;
             tg.expand();
 
             const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                manifestUrl: 'https://raw.githubusercontent.com/ton-connect/demo-dapp/main/public/tonconnect-manifest.json',
+                manifestUrl: 'https://zxcymf.github.io/ton-game/tonconnect-manifest.json',
                 buttonRootId: 'ton-connect-button'
             });
 
@@ -5665,10 +5690,32 @@
             const modal = document.getElementById('nicknameModal');
             const display = document.getElementById('profileUsername');
 
+            window.saveBalanceToDB = function() {
+                if (user) {
+                    db.ref('users/' + user.id).update({ balance: balance });
+                }
+            };
+
             if (user) {
                 username = user.username ? '@' + user.username : user.first_name;
-                if(display) display.textContent = username;
-                if(modal) modal.style.display = 'none';
+                const userRef = db.ref('users/' + user.id);
+                
+                userRef.once('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        balance = data.balance || 0.10;
+                    } else {
+                        userRef.set({
+                            username: username,
+                            balance: 0.10,
+                            lastLogin: new Date().toISOString()
+                        });
+                        balance = 0.10;
+                    }
+                    if(display) display.textContent = username;
+                    if(modal) modal.style.display = 'none';
+                    updateBalanceDisplay();
+                });
             } else {
                 loadGameData(); 
             }
@@ -5727,7 +5774,6 @@
                     if(modal) modal.classList.remove('hidden');
                 } else {
                     initializeGame(currentGame);
-                    
                     document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
                     const activeTab = document.querySelector(`[data-game="${currentGame}"]`);
                     if(activeTab) activeTab.classList.add('active');
