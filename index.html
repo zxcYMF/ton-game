@@ -2850,6 +2850,7 @@
 </head>
 
 <body>
+    
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
         <img class="loading-gif" id="loadingGif" src="https://i.postimg.cc/MGF2ML5M/ezgif-78c292e779aaf7ba.gif" alt="Loading">
@@ -3100,12 +3101,12 @@
 
                     <div class="manual-deposit" style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
                         <div style="color: #aaa; font-size: 0.9em; margin-bottom: 10px;">Введите сумму в TON:</div>
-                        <div style="display: flex; gap: 10px;">
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
                             <input type="number" id="tonAmountInput" placeholder="1.0" step="0.1" min="0.1" 
-                                   style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; outline: none;">
+                                   style="width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; outline: none; box-sizing: border-box; font-size: 16px;">
                             <button class="vibrate-click" onclick="depositManualTON()" 
-                                    style="padding: 0 20px; background: #0088cc; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                                Оплатить
+                                    style="width: 100%; padding: 14px; background: #0088cc; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">
+                                Оплатить через TON Connect
                             </button>
                         </div>
                     </div>
@@ -3330,6 +3331,8 @@
     </div>
 
     <script>
+        let tonConnectUI; 
+        const ADMIN_WALLET = "UQC5UX1bLI9TAkXyR2q-C_M1Kx3HbUxdtcUOShVIcWhMqHkG";
         // Enhanced Vibration utility with rich patterns
         function vibrate(pattern = [50]) {
             if (navigator.vibrate) {
@@ -5704,7 +5707,7 @@
             const tg = window.Telegram.WebApp;
             tg.expand();
 
-            const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
                 manifestUrl: 'https://zxcymf.github.io/ton-game/tonconnect-manifest.json',
                 buttonRootId: 'ton-connect-button'
             });
@@ -5816,7 +5819,6 @@
                 if(typeof initDepositGame === 'function') initDepositGame();
             }, 3000);
         });
-        const ADMIN_WALLET = "UQC5UX1bLI9TAkXyR2q-C_M1Kx3HbUxdtcUOShVIcWhMqHkG";
 
         async function depositTON(amount) {
             if (!tonConnectUI.connected) {
@@ -5857,8 +5859,14 @@
             const input = document.getElementById('tonAmountInput');
             const amount = parseFloat(input.value);
 
+            if (!tonConnectUI) {
+                console.error("TonConnect не инициализирован");
+                return;
+            }
+
             if (!tonConnectUI.connected) {
                 alert("Пожалуйста, сначала подключите кошелек (кнопка вверху)!");
+                tonConnectUI.openModal();
                 return;
             }
 
@@ -5867,24 +5875,38 @@
                 return;
             }
 
+            await executeTransaction(amount);
+        };
+
+        async function executeTransaction(amount) {
             const transaction = {
                 validUntil: Math.floor(Date.now() / 1000) + 600,
                 messages: [
                     {
-                        address: "UQC5UX1bLI9TAkXyR2q-C_M1Kx3HbUxdtcUOShVIcWhMqHkG", // Кошелек заказчика
-                        amount: (amount * 1000000000).toString(), // Конвертация суммы из ввода в нанотоны
+                        address: ADMIN_WALLET,
+                        amount: (amount * 1000000000).toString(),
                     }
                 ]
             };
 
             try {
                 await tonConnectUI.sendTransaction(transaction);
+   
+                const user = window.Telegram.WebApp.initDataUnsafe.user;
+                if (user) {
+                    db.ref('deposits/' + user.id).push({
+                        amount: amount,
+                        status: "sent",
+                        date: new Date().toISOString()
+                    });
+                }
+                
                 alert(`Запрос на ${amount} TON отправлен в ваш кошелек!`);
             } catch (e) {
                 console.error(e);
-                alert("Ошибка при создании платежа.");
+                alert("Ошибка при создании платежа или отказ пользователя.");
             }
-        };
+        }
     </script>
 </body>
 </html>
