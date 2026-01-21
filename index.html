@@ -5656,8 +5656,12 @@
             messagingSenderId: "1057469053210",
             appId: "1:1057469053210:web:811fa4e8ea33572e0c54a3"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            } else {
+                firebase.app(); 
+            }
+            const db = firebase.database();
 
         document.addEventListener('DOMContentLoaded', function () {
             const tg = window.Telegram.WebApp;
