@@ -5647,21 +5647,25 @@
             }
         });
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyD5J4jYkIPKu77wPmB9IhFMeKf1hBS7Cvs",
-            authDomain: "ton-game-app.firebaseapp.com",
-            databaseURL: "https://ton-game-app-default-rtdb.firebaseio.com",
-            projectId: "ton-game-app",
-            storageBucket: "ton-game-app.firebasestorage.app",
-            messagingSenderId: "1057469053210",
-            appId: "1:1057469053210:web:811fa4e8ea33572e0c54a3"
-        };
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            } else {
-                firebase.app(); 
+            const firebaseConfig = {
+                apiKey: "AIzaSyD5J4jYkIPKu77wPmB9IhFMeKf1hBS7Cvs",
+                authDomain: "ton-game-app.firebaseapp.com",
+                databaseURL: "https://ton-game-app-default-rtdb.firebaseio.com",
+                projectId: "ton-game-app",
+                storageBucket: "ton-game-app.firebasestorage.app",
+                messagingSenderId: "1057469053210",
+                appId: "1:1057469053210:web:811fa4e8ea33572e0c54a3"
+            };
+
+            let db; 
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.database();
+            } catch (e) {
+                console.log("Firebase error:", e);
             }
-            const db = firebase.database();
 
         document.addEventListener('DOMContentLoaded', function () {
             const tg = window.Telegram.WebApp;
