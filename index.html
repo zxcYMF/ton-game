@@ -5878,43 +5878,40 @@
             };
 
             try {
-            const result = await tonConnectUI.sendTransaction(transaction);
-            
-            const user = window.Telegram.WebApp.initDataUnsafe.user;
-            if (user) {
-                const userRef = db.ref('users/' + user.id);
+                await tonConnectUI.sendTransaction(transaction);
                 
-                userRef.once('value', (snapshot) => {
-                    let currentBalance = 0;
-                    if (snapshot.exists()) {
-                        currentBalance = snapshot.val().balance || 0;
-                    }
-  
-                    let newBalance = Number((currentBalance + amount).toFixed(2));
- 
-                    userRef.update({ balance: newBalance });
+                const user = window.Telegram.WebApp.initDataUnsafe.user;
+                if (user) {
+                    const userRef = db.ref('users/' + user.id);
+                    userRef.once('value', (snapshot) => {
+                        let currentBalance = 0;
+                        if (snapshot.exists()) {
+                            currentBalance = snapshot.val().balance || 0;
+                        }
+                        
+                        let newBalance = Number((currentBalance + amount).toFixed(2));
+                        
+                        userRef.update({ balance: newBalance });
+                        window.balance = newBalance; 
+                        
+                        const balanceElement = document.getElementById('statusBalance');
+                        if (balanceElement) {
+                            balanceElement.textContent = newBalance.toFixed(2);
+                        }
 
-                    window.balance = newBalance; 
-                    
-                    const balanceElement = document.getElementById('statusBalance');
-                    if (balanceElement) {
-                        balanceElement.textContent = newBalance.toFixed(2); 
-                    }
-
-                    
-                    db.ref('deposits/' + user.id).push({
-                        amount: amount,
-                        status: "completed",
-                        timestamp: Date.now()
+                        db.ref('deposits/' + user.id).push({
+                            amount: amount,
+                            status: "completed",
+                            timestamp: Date.now()
+                        });
                     });
-                });
-            }
-            
+                }
                 alert(`Баланс успешно пополнен на ${amount} TON!`);
             } catch (e) {
                 console.error(e);
                 alert("Ошибка при подтверждении платежа.");
             }
+        };
 
         async function executeTransaction(amount) {
             const transaction = {
