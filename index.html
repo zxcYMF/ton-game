@@ -5696,6 +5696,7 @@
             }
         });
 
+            // правка
             const firebaseConfig = {
                 apiKey: "AIzaSyD5J4jYkIPKu77wPmB9IhFMeKf1hBS7Cvs",
                 authDomain: "ton-game-app.firebaseapp.com",
@@ -5705,6 +5706,7 @@
                 messagingSenderId: "1057469053210",
                 appId: "1:1057469053210:web:811fa4e8ea33572e0c54a3"
             };
+            // правка
 
             let db; 
             try {
@@ -5719,11 +5721,13 @@
         document.addEventListener('DOMContentLoaded', function () {
             const tg = window.Telegram.WebApp;
             tg.expand();
-
+            
+            // правка
             tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
                 manifestUrl: 'https://zxcymf.github.io/ton-game/tonconnect-manifest.json',
                 buttonRootId: 'ton-connect-button'
             });
+            // правка
 
             document.addEventListener('click', function(e) {
                 if (e.target.matches('button, .vibrate-click, .game-tab, .tab, input[type="number"], input[type="text"]')) {
